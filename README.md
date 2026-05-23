@@ -6,6 +6,7 @@ ESP32-S3-basierter Sound Player fuer den Eingangsbereich. Erkennt Personen per m
 
 - **Personenerkennung** via HLK-LD2410C mmWave-Radar (kein PIR, funktioniert auch bei Stillstand)
 - **MP3-Wiedergabe** ueber DFPlayer Pro (DFRobot DF1201S) mit Lautsprecher
+- **4 Tracks** zur Auswahl ueber das Captive Portal
 - **Automatische Track-Erkennung** - Wiedergabedauer wird automatisch erkannt
 - **Wireless Presenter** als Fernbedienung (USB HID via Dongle)
 - **Captive Portal** zur Konfiguration per Smartphone
@@ -33,8 +34,8 @@ DFPlayer Pro           ESP32-S3
 +--------------+
 | VCC          | ---- 3.3V - 5V
 | GND          | ---- GND
-| RX           | ---- GPIO17
-| TX           | ---- GPIO18
+| RX           | ---- GPIO18
+| TX           | ---- GPIO17
 | SPK_1        | ---- Lautsprecher +
 | SPK_2        | ---- Lautsprecher -
 +--------------+
@@ -74,15 +75,19 @@ USB-A Buchse           ESP32-S3
 | 6    | LD2410C OUT (Praesenz-Signal) |
 | 15   | LD2410C RX (UART) |
 | 16   | LD2410C TX (UART) |
-| 17   | DFPlayer Pro RX (UART 115200) |
-| 18   | DFPlayer Pro TX (UART 115200) |
+| 17   | DFPlayer Pro TX (UART 115200) |
+| 18   | DFPlayer Pro RX (UART 115200) |
 | 19   | USB Host D- (Presenter-Dongle) |
 | 20   | USB Host D+ (Presenter-Dongle) |
 
 ## SD-Karte vorbereiten
 
 1. microSD Karte (max. 32GB) mit **FAT32** formatieren
-2. MP3-Datei als `0001.mp3` im Root-Verzeichnis ablegen
+2. MP3-Dateien nummeriert im Root-Verzeichnis ablegen:
+   - `0001.mp3` — Track 1 (Crowd Fans Song)
+   - `0002.mp3` — Track 2 (Crowd Reaction)
+   - `0003.mp3` — Track 3 (Fans Cheering)
+   - `0004.mp3` — Track 4 (Jingle mit Outro)
 3. SD-Karte in den DFPlayer Pro einsetzen
 
 ## Firmware flashen
@@ -120,6 +125,9 @@ pio device monitor
 - **Slider (0-30):** Lautstaerke regeln
 - **Stumm-Button:** Ton ein/aus
 - **Ton testen:** Spielt den Sound einmal testweise ab
+
+#### Sound
+- **Track auswaehlen (1-4):** Welcher Sound bei Erkennung abgespielt wird. Auswahl wird persistent gespeichert.
 
 #### Erkennung
 

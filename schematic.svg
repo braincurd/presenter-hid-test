@@ -1,0 +1,274 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 700" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="700" fill="#f8f8f8" rx="8"/>
+
+  <!-- Title -->
+  <text x="550" y="35" text-anchor="middle" font-size="20" font-weight="bold" fill="#333">Laola - Schaltplan / Wiring Diagram</text>
+  <text x="550" y="55" text-anchor="middle" font-size="12" fill="#888">ESP32-S3 + DFPlayer Pro + LD2410C + USB Host HID</text>
+
+  <!-- ==================== ESP32-S3 ==================== -->
+  <rect x="400" y="120" width="280" height="480" rx="10" fill="#1a1a2e" stroke="#333" stroke-width="2"/>
+  <rect x="410" y="130" width="260" height="460" rx="6" fill="#16213e"/>
+  <text x="540" y="165" text-anchor="middle" font-size="16" font-weight="bold" fill="#e94560">ESP32-S3</text>
+  <text x="540" y="185" text-anchor="middle" font-size="11" fill="#aaa">DevKitC-1 (Freenove)</text>
+
+  <!-- ESP32 Pins - Left side -->
+  <g font-size="11" fill="#0f3460">
+    <!-- Power pins -->
+    <rect x="420" y="210" width="100" height="24" rx="3" fill="#e8f4fd" stroke="#0f3460" stroke-width="1"/>
+    <text x="470" y="226" text-anchor="middle" font-weight="bold">3.3V</text>
+
+    <rect x="420" y="245" width="100" height="24" rx="3" fill="#e8f4fd" stroke="#0f3460" stroke-width="1"/>
+    <text x="470" y="261" text-anchor="middle" font-weight="bold">5V</text>
+
+    <rect x="420" y="280" width="100" height="24" rx="3" fill="#e8f4fd" stroke="#0f3460" stroke-width="1"/>
+    <text x="470" y="296" text-anchor="middle" font-weight="bold">GND</text>
+
+    <!-- GPIO pins left -->
+    <rect x="420" y="330" width="100" height="24" rx="3" fill="#fff3e0" stroke="#e65100" stroke-width="1"/>
+    <text x="470" y="346" text-anchor="middle" fill="#e65100" font-weight="bold">GPIO 6</text>
+
+    <rect x="420" y="365" width="100" height="24" rx="3" fill="#fff3e0" stroke="#e65100" stroke-width="1"/>
+    <text x="470" y="381" text-anchor="middle" fill="#e65100" font-weight="bold">GPIO 15</text>
+
+    <rect x="420" y="400" width="100" height="24" rx="3" fill="#fff3e0" stroke="#e65100" stroke-width="1"/>
+    <text x="470" y="416" text-anchor="middle" fill="#e65100" font-weight="bold">GPIO 16</text>
+  </g>
+
+  <!-- ESP32 Pins - Right side -->
+  <g font-size="11">
+    <rect x="560" y="330" width="100" height="24" rx="3" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1"/>
+    <text x="610" y="346" text-anchor="middle" fill="#2e7d32" font-weight="bold">GPIO 18</text>
+
+    <rect x="560" y="365" width="100" height="24" rx="3" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1"/>
+    <text x="610" y="381" text-anchor="middle" fill="#2e7d32" font-weight="bold">GPIO 17</text>
+
+    <rect x="560" y="420" width="100" height="24" rx="3" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1"/>
+    <text x="610" y="436" text-anchor="middle" fill="#7b1fa2" font-weight="bold">GPIO 19</text>
+
+    <rect x="560" y="455" width="100" height="24" rx="3" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1"/>
+    <text x="610" y="471" text-anchor="middle" fill="#7b1fa2" font-weight="bold">GPIO 20</text>
+  </g>
+
+  <!-- USB-C label -->
+  <rect x="500" y="530" width="80" height="50" rx="6" fill="#333" stroke="#555" stroke-width="1"/>
+  <text x="540" y="555" text-anchor="middle" font-size="9" fill="#ccc">USB-C</text>
+  <text x="540" y="570" text-anchor="middle" font-size="8" fill="#999">Upload</text>
+
+  <!-- ==================== DFPlayer Pro ==================== -->
+  <rect x="780" y="200" width="240" height="220" rx="8" fill="#1b5e20" stroke="#2e7d32" stroke-width="2"/>
+  <text x="900" y="230" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff">DFPlayer Pro</text>
+  <text x="900" y="248" text-anchor="middle" font-size="10" fill="#a5d6a7">DFRobot DF1201S</text>
+
+  <g font-size="11" fill="#fff">
+    <text x="800" y="278">VCC</text>
+    <text x="800" y="303">GND</text>
+    <text x="800" y="328">RX</text>
+    <text x="800" y="353">TX</text>
+    <text x="800" y="383">SPK_1</text>
+    <text x="800" y="403">SPK_2</text>
+  </g>
+
+  <!-- DFPlayer pin dots -->
+  <g fill="#a5d6a7">
+    <circle cx="793" cy="274" r="3"/>
+    <circle cx="793" cy="299" r="3"/>
+    <circle cx="793" cy="324" r="3"/>
+    <circle cx="793" cy="349" r="3"/>
+    <circle cx="793" cy="379" r="3"/>
+    <circle cx="793" cy="399" r="3"/>
+  </g>
+
+  <!-- SD card slot -->
+  <rect x="870" y="330" width="80" height="45" rx="4" fill="#2e7d32" stroke="#4caf50" stroke-width="1"/>
+  <text x="910" y="350" text-anchor="middle" font-size="9" fill="#c8e6c9">microSD</text>
+  <text x="910" y="365" text-anchor="middle" font-size="8" fill="#a5d6a7">0001.mp3</text>
+
+  <!-- UART badge -->
+  <rect x="870" y="270" width="80" height="20" rx="3" fill="#4caf50"/>
+  <text x="910" y="284" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">UART 115200</text>
+
+  <!-- ==================== LD2410C ==================== -->
+  <rect x="50" y="200" width="220" height="230" rx="8" fill="#b71c1c" stroke="#d32f2f" stroke-width="2"/>
+  <text x="160" y="230" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff">HLK-LD2410C</text>
+  <text x="160" y="248" text-anchor="middle" font-size="10" fill="#ef9a9a">24GHz mmWave Radar</text>
+
+  <g font-size="11" fill="#fff">
+    <text x="230" y="283" text-anchor="end">VCC</text>
+    <text x="230" y="308" text-anchor="end">GND</text>
+    <text x="230" y="338" text-anchor="end">OUT</text>
+    <text x="230" y="368" text-anchor="end">TX</text>
+    <text x="230" y="398" text-anchor="end">RX</text>
+  </g>
+
+  <!-- LD2410 pin dots -->
+  <g fill="#ef9a9a">
+    <circle cx="240" cy="279" r="3"/>
+    <circle cx="240" cy="304" r="3"/>
+    <circle cx="240" cy="334" r="3"/>
+    <circle cx="240" cy="364" r="3"/>
+    <circle cx="240" cy="394" r="3"/>
+  </g>
+
+  <!-- UART badge -->
+  <rect x="80" y="280" width="80" height="20" rx="3" fill="#d32f2f"/>
+  <text x="120" y="294" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">UART 256000</text>
+
+  <!-- Radar waves -->
+  <path d="M100,370 Q60,340 100,310" fill="none" stroke="#ef9a9a" stroke-width="1.5" opacity="0.5"/>
+  <path d="M85,380 Q35,340 85,300" fill="none" stroke="#ef9a9a" stroke-width="1.5" opacity="0.3"/>
+
+  <!-- ==================== USB-A Buchse ==================== -->
+  <rect x="780" y="480" width="240" height="160" rx="8" fill="#4a148c" stroke="#7b1fa2" stroke-width="2"/>
+  <text x="900" y="510" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff">USB-A Buchse</text>
+  <text x="900" y="528" text-anchor="middle" font-size="10" fill="#ce93d8">Presenter-Dongle</text>
+
+  <g font-size="11" fill="#fff">
+    <text x="800" y="558">VBUS (5V)</text>
+    <text x="800" y="583">D-</text>
+    <text x="800" y="608">D+</text>
+    <text x="800" y="633">GND</text>
+  </g>
+
+  <g fill="#ce93d8">
+    <circle cx="793" cy="554" r="3"/>
+    <circle cx="793" cy="579" r="3"/>
+    <circle cx="793" cy="604" r="3"/>
+    <circle cx="793" cy="629" r="3"/>
+  </g>
+
+  <!-- Presenter icon -->
+  <rect x="920" y="555" width="50" height="75" rx="12" fill="#6a1b9a" stroke="#9c27b0" stroke-width="1"/>
+  <circle cx="945" cy="580" r="8" fill="none" stroke="#ce93d8" stroke-width="1.5"/>
+  <rect x="935" y="600" width="20" height="6" rx="2" fill="#ce93d8" opacity="0.5"/>
+  <rect x="935" y="612" width="20" height="6" rx="2" fill="#ce93d8" opacity="0.5"/>
+  <text x="945" y="648" text-anchor="middle" font-size="8" fill="#ce93d8">Presenter</text>
+
+  <!-- ==================== Lautsprecher ==================== -->
+  <rect x="870" y="395" width="80" height="50" rx="4" fill="#263238" stroke="#546e7a" stroke-width="1.5"/>
+  <text x="910" y="418" text-anchor="middle" font-size="10" fill="#b0bec5" font-weight="bold">Speaker</text>
+  <text x="910" y="434" text-anchor="middle" font-size="8" fill="#78909c">4-8 Ohm</text>
+
+  <!-- Speaker cone icon -->
+  <path d="M855,405 L845,415 L845,430 L855,440 L865,430 L865,415 Z" fill="#546e7a"/>
+  <path d="M840,420 Q830,425 840,430" fill="none" stroke="#78909c" stroke-width="1.5"/>
+
+  <!-- ==================== Wires ==================== -->
+
+  <!-- DFPlayer Pro connections -->
+  <!-- VCC (3.3-5V) -->
+  <line x1="660" y1="257" x2="720" y2="257" stroke="#f44336" stroke-width="2"/>
+  <line x1="720" y1="257" x2="720" y2="274" stroke="#f44336" stroke-width="2"/>
+  <line x1="720" y1="274" x2="793" y2="274" stroke="#f44336" stroke-width="2"/>
+  <text x="740" y="268" font-size="8" fill="#f44336">3.3-5V</text>
+
+  <!-- GND -->
+  <line x1="660" y1="292" x2="730" y2="292" stroke="#555" stroke-width="2"/>
+  <line x1="730" y1="292" x2="730" y2="299" stroke="#555" stroke-width="2"/>
+  <line x1="730" y1="299" x2="793" y2="299" stroke="#555" stroke-width="2"/>
+
+  <!-- GPIO17 -> DFPlayer RX -->
+  <line x1="660" y1="342" x2="740" y2="342" stroke="#4caf50" stroke-width="2"/>
+  <line x1="740" y1="342" x2="740" y2="324" stroke="#4caf50" stroke-width="2"/>
+  <line x1="740" y1="324" x2="793" y2="324" stroke="#4caf50" stroke-width="2"/>
+  <text x="745" y="318" font-size="8" fill="#4caf50">RX</text>
+
+  <!-- GPIO18 -> DFPlayer TX -->
+  <line x1="660" y1="377" x2="750" y2="377" stroke="#4caf50" stroke-width="2"/>
+  <line x1="750" y1="377" x2="750" y2="349" stroke="#4caf50" stroke-width="2"/>
+  <line x1="750" y1="349" x2="793" y2="349" stroke="#4caf50" stroke-width="2"/>
+  <text x="755" y="362" font-size="8" fill="#4caf50">TX</text>
+
+  <!-- Speaker wires -->
+  <line x1="870" y1="415" x2="870" y2="379" stroke="#78909c" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <line x1="870" y1="399" x2="870" y2="430" stroke="#78909c" stroke-width="1.5" stroke-dasharray="4,2"/>
+
+  <!-- LD2410C connections -->
+  <!-- VCC (3.3V) -->
+  <line x1="240" y1="279" x2="340" y2="279" stroke="#f44336" stroke-width="2"/>
+  <line x1="340" y1="279" x2="340" y2="222" stroke="#f44336" stroke-width="2"/>
+  <line x1="340" y1="222" x2="420" y2="222" stroke="#f44336" stroke-width="2"/>
+  <text x="355" y="218" font-size="8" fill="#f44336">3.3V</text>
+
+  <!-- GND -->
+  <line x1="240" y1="304" x2="350" y2="304" stroke="#555" stroke-width="2"/>
+  <line x1="350" y1="304" x2="350" y2="292" stroke="#555" stroke-width="2"/>
+  <line x1="350" y1="292" x2="420" y2="292" stroke="#555" stroke-width="2"/>
+
+  <!-- OUT -> GPIO6 -->
+  <line x1="240" y1="334" x2="360" y2="334" stroke="#ff9800" stroke-width="2"/>
+  <line x1="360" y1="334" x2="360" y2="342" stroke="#ff9800" stroke-width="2"/>
+  <line x1="360" y1="342" x2="420" y2="342" stroke="#ff9800" stroke-width="2"/>
+  <text x="300" y="330" font-size="8" fill="#ff9800">OUT (Digital)</text>
+
+  <!-- TX -> GPIO16 -->
+  <line x1="240" y1="364" x2="370" y2="364" stroke="#ff9800" stroke-width="2"/>
+  <line x1="370" y1="364" x2="370" y2="412" stroke="#ff9800" stroke-width="2"/>
+  <line x1="370" y1="412" x2="420" y2="412" stroke="#ff9800" stroke-width="2"/>
+  <text x="300" y="360" font-size="8" fill="#ff9800">TX</text>
+
+  <!-- RX -> GPIO15 -->
+  <line x1="240" y1="394" x2="380" y2="394" stroke="#ff9800" stroke-width="2"/>
+  <line x1="380" y1="394" x2="380" y2="377" stroke="#ff9800" stroke-width="2"/>
+  <line x1="380" y1="377" x2="420" y2="377" stroke="#ff9800" stroke-width="2"/>
+  <text x="300" y="390" font-size="8" fill="#ff9800">RX</text>
+
+  <!-- USB-A connections -->
+  <!-- VBUS (5V) -->
+  <line x1="660" y1="257" x2="700" y2="257" stroke="#f44336" stroke-width="2"/>
+  <line x1="700" y1="257" x2="700" y2="554" stroke="#f44336" stroke-width="2"/>
+  <line x1="700" y1="554" x2="793" y2="554" stroke="#f44336" stroke-width="2"/>
+  <text x="760" y="548" font-size="8" fill="#f44336">5V</text>
+
+  <!-- D- -> GPIO19 -->
+  <line x1="660" y1="432" x2="760" y2="432" stroke="#9c27b0" stroke-width="2"/>
+  <line x1="760" y1="432" x2="760" y2="579" stroke="#9c27b0" stroke-width="2"/>
+  <line x1="760" y1="579" x2="793" y2="579" stroke="#9c27b0" stroke-width="2"/>
+  <text x="765" y="573" font-size="8" fill="#9c27b0">D-</text>
+
+  <!-- D+ -> GPIO20 -->
+  <line x1="660" y1="467" x2="770" y2="467" stroke="#9c27b0" stroke-width="2"/>
+  <line x1="770" y1="467" x2="770" y2="604" stroke="#9c27b0" stroke-width="2"/>
+  <line x1="770" y1="604" x2="793" y2="604" stroke="#9c27b0" stroke-width="2"/>
+  <text x="775" y="598" font-size="8" fill="#9c27b0">D+</text>
+
+  <!-- GND USB -->
+  <line x1="700" y1="629" x2="793" y2="629" stroke="#555" stroke-width="2"/>
+  <line x1="700" y1="554" x2="700" y2="629" stroke="#555" stroke-width="0" opacity="0"/>
+
+  <!-- GND bus line -->
+  <line x1="350" y1="292" x2="350" y2="640" stroke="#555" stroke-width="2" stroke-dasharray="6,3"/>
+  <line x1="350" y1="640" x2="700" y2="640" stroke="#555" stroke-width="2" stroke-dasharray="6,3"/>
+  <line x1="700" y1="629" x2="700" y2="640" stroke="#555" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="520" y="655" text-anchor="middle" font-size="9" fill="#777">GND (gemeinsame Masse)</text>
+
+  <!-- ==================== Legend ==================== -->
+  <rect x="50" y="470" width="220" height="160" rx="6" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <text x="160" y="492" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">Legende</text>
+
+  <line x1="70" y1="510" x2="110" y2="510" stroke="#f44336" stroke-width="2"/>
+  <text x="120" y="514" font-size="10" fill="#555">Stromversorgung (VCC)</text>
+
+  <line x1="70" y1="530" x2="110" y2="530" stroke="#555" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="120" y="534" font-size="10" fill="#555">GND (Masse)</text>
+
+  <line x1="70" y1="550" x2="110" y2="550" stroke="#ff9800" stroke-width="2"/>
+  <text x="120" y="554" font-size="10" fill="#555">Radar (UART/Digital)</text>
+
+  <line x1="70" y1="570" x2="110" y2="570" stroke="#4caf50" stroke-width="2"/>
+  <text x="120" y="574" font-size="10" fill="#555">DFPlayer Pro (UART)</text>
+
+  <line x1="70" y1="590" x2="110" y2="590" stroke="#9c27b0" stroke-width="2"/>
+  <text x="120" y="594" font-size="10" fill="#555">USB Host (D+/D-)</text>
+
+  <text x="160" y="620" text-anchor="middle" font-size="9" fill="#999">Kein Vorwiderstand noetig!</text>
+
+  <!-- Version -->
+  <text x="1080" y="690" text-anchor="end" font-size="9" fill="#bbb">Laola v1.1 - DFPlayer Pro</text>
+</svg>
