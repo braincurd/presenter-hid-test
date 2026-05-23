@@ -5,7 +5,8 @@ ESP32-S3-basierter Sound Player fuer den Eingangsbereich. Erkennt Personen per m
 ## Features
 
 - **Personenerkennung** via HLK-LD2410C mmWave-Radar (kein PIR, funktioniert auch bei Stillstand)
-- **MP3-Wiedergabe** ueber DFPlayer Mini mit Lautsprecher
+- **MP3-Wiedergabe** ueber DFPlayer Pro (DFRobot DF1201S) mit Lautsprecher
+- **Automatische Track-Erkennung** - Wiedergabedauer wird automatisch erkannt
 - **Wireless Presenter** als Fernbedienung (USB HID via Dongle)
 - **Captive Portal** zur Konfiguration per Smartphone
 - **Persistente Einstellungen** bleiben nach Neustart erhalten
@@ -17,29 +18,29 @@ ESP32-S3-basierter Sound Player fuer den Eingangsbereich. Erkennt Personen per m
 |------------|-------------|
 | ESP32-S3 DevKitC-1 (Freenove) | Mikrocontroller |
 | HLK-LD2410C | 24GHz mmWave Praesenz-Sensor |
-| DFPlayer Mini | MP3 Player Modul |
+| DFPlayer Pro (DFRobot DF1201S) | MP3 Player Modul mit integriertem Verstaerker |
 | Wireless Presenter (2.4GHz) | Fernbedienung mit USB-Dongle |
 | Lautsprecher (4-8 Ohm) | Audio-Ausgabe |
 | USB-A Buchse | Fuer Presenter-Dongle |
-| microSD Karte (FAT32) | Fuer MP3-Dateien im DFPlayer |
+| microSD Karte (FAT32) | Fuer MP3-Dateien im DFPlayer Pro |
 
 ## Verkabelung
 
-### DFPlayer Mini
+### DFPlayer Pro (DF1201S)
 
 ```
-DFPlayer Mini          ESP32-S3
+DFPlayer Pro           ESP32-S3
 +--------------+
-| VCC          | ---- 5V
+| VCC          | ---- 3.3V - 5V
 | GND          | ---- GND
-| RX           | ---- GPIO17 (ueber 1kOhm Widerstand)
+| RX           | ---- GPIO17
 | TX           | ---- GPIO18
 | SPK_1        | ---- Lautsprecher +
 | SPK_2        | ---- Lautsprecher -
 +--------------+
 ```
 
-**Wichtig:** Zwischen GPIO17 und DFPlayer RX einen 1kOhm Widerstand einsetzen (Pegelschutz).
+**Hinweis:** Der DFPlayer Pro arbeitet mit 3.3V-Logik und benoetigt keinen Vorwiderstand an RX. UART-Baudrate: 115200.
 
 ### HLK-LD2410C Radar-Sensor
 
@@ -73,8 +74,8 @@ USB-A Buchse           ESP32-S3
 | 6    | LD2410C OUT (Praesenz-Signal) |
 | 15   | LD2410C RX (UART) |
 | 16   | LD2410C TX (UART) |
-| 17   | DFPlayer RX (UART, ueber 1kOhm) |
-| 18   | DFPlayer TX (UART) |
+| 17   | DFPlayer Pro RX (UART 115200) |
+| 18   | DFPlayer Pro TX (UART 115200) |
 | 19   | USB Host D- (Presenter-Dongle) |
 | 20   | USB Host D+ (Presenter-Dongle) |
 
@@ -82,7 +83,7 @@ USB-A Buchse           ESP32-S3
 
 1. microSD Karte (max. 32GB) mit **FAT32** formatieren
 2. MP3-Datei als `0001.mp3` im Root-Verzeichnis ablegen
-3. SD-Karte in den DFPlayer Mini einsetzen
+3. SD-Karte in den DFPlayer Pro einsetzen
 
 ## Firmware flashen
 
@@ -127,7 +128,6 @@ pio device monitor
   - Niedrig = nur direkt davor
   - Mittel = normaler Betrieb (empfohlen)
   - Hoch = auch seitlich und weiter entfernt
-- **Track-Laenge:** Dauer der MP3-Datei in Sekunden (fuer Timer-Erkennung)
 - **Pause nach Abspielen (0-60s):** Wartezeit bevor der Sound erneut ausgeloest wird. Verhindert Dauer-Abspielen bei stehenbleibenden Personen. Empfohlen: 10-30s
 - **Sensor-Timeout (1-30s):** Nach wie vielen Sekunden Stillstand gilt eine Person als "weg"
 
@@ -161,7 +161,7 @@ Der Wireless Presenter wird per USB-Dongle an die USB-A Buchse angeschlossen.
 1. ESP32-S3 startet und oeffnet WLAN Access Point
 2. Radar-Sensor ueberwacht den Eingangsbereich
 3. Person betritt den Bereich → OUT-Pin geht HIGH
-4. Sound wird einmal abgespielt
+4. Sound wird einmal abgespielt (Track-Dauer wird automatisch erkannt)
 5. Nach Ablauf des Sounds beginnt die Cooldown-Phase
 6. Erst wenn Cooldown abgelaufen UND Person weg → bereit fuer naechste Erkennung
 
@@ -173,7 +173,7 @@ IDLE ──[Person erkannt]──> PLAYING ──[Sound fertig]──> COOLDOWN 
 
 | Problem | Loesung |
 |---------|---------|
-| DFPlayer spielt nicht | SD-Karte FAT32 formatiert? Datei als `0001.mp3` im Root? 1kOhm Widerstand an RX? |
+| DFPlayer Pro spielt nicht | SD-Karte FAT32 formatiert? Datei als `0001.mp3` im Root? UART-Baudrate 115200? |
 | Sensor erkennt nichts | Verkabelung pruefen (TX/RX nicht vertauscht?). OUT-Pin an GPIO6? |
 | Captive Portal oeffnet nicht | Manuell `http://192.168.4.1` im Browser aufrufen |
 | Sound wird permanent getriggert | Pause nach Abspielen erhoehen (15-30s). Empfindlichkeit auf "Niedrig" |

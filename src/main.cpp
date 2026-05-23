@@ -4,7 +4,7 @@
 #include <DNSServer.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <DFRobotDFPlayerMini.h>
+#include <DFRobot_DF1201S.h>
 #include <ld2410.h>
 #include "driver/gpio.h"
 #include "usb/usb_host.h"
@@ -27,7 +27,7 @@ static volatile bool muted = false;
 static const uint8_t VOL_MAX = 30;
 
 HardwareSerial dfSerial(1);
-DFRobotDFPlayerMini dfPlayer;
+DFRobot_DF1201S dfPlayer;
 static bool dfPlayerReady = false;
 
 HardwareSerial radarSerial(2);
@@ -43,7 +43,6 @@ static unsigned long playbackStartedAt = 0;
 static unsigned long cooldownSeconds = 10;
 static unsigned long lastTriggerAt = 0;
 static unsigned long minTriggerInterval = 5000;
-static unsigned long trackDurationMs = 30000;
 static volatile bool requestPlay = false;
 
 // --- Persistent Settings ---
@@ -54,7 +53,6 @@ static void save_settings() {
     prefs.putUChar("volume", volume);
     prefs.putBool("muted", muted);
     prefs.putULong("cooldown", cooldownSeconds);
-    prefs.putULong("tracklen", trackDurationMs);
     prefs.end();
     printf("[NVS] Einstellungen gespeichert\n");
 }
@@ -64,9 +62,8 @@ static void load_settings() {
     volume = prefs.getUChar("volume", 20);
     muted = prefs.getBool("muted", false);
     cooldownSeconds = prefs.getULong("cooldown", 10);
-    trackDurationMs = prefs.getULong("tracklen", 30000);
     prefs.end();
-    printf("[NVS] Einstellungen geladen: vol=%d cool=%lu track=%lu\n", volume, cooldownSeconds, trackDurationMs);
+    printf("[NVS] Einstellungen geladen: vol=%d cool=%lu\n", volume, cooldownSeconds);
 }
 
 // --- WiFi AP & Web ---
@@ -90,10 +87,10 @@ static const char *hid_proto_name_str[] = {"NONE", "KEYBOARD", "MOUSE"};
 static void apply_volume() {
     if (!dfPlayerReady) return;
     if (muted) {
-        dfPlayer.volume(0);
+        dfPlayer.setVol(0);
         printf("[Audio] MUTED\n");
     } else {
-        dfPlayer.volume(volume);
+        dfPlayer.setVol(volume);
         printf("[Audio] Volume: %d / %d\n", volume, VOL_MAX);
     }
 }
@@ -252,19 +249,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;heigh
 <div class="divider"></div>
 
 <div class="field">
-<div class="field-label">Track-Laenge</div>
-<div class="field-help">Wie lange ist die MP3-Datei? (Fuer die Timer-Erkennung)</div>
-<div class="slider-row" style="margin-top:8px">
-<span style="font-size:.8em;color:#999">5s</span>
-<input type="range" id="tracklen" min="5" max="120" value="30" step="5" oninput="$('tlVal').textContent=this.value+'s'" onchange="setTrackLen()">
-<span style="font-size:.8em;color:#999">120s</span>
-<span class="slider-val" id="tlVal">30s</span>
-</div>
-</div>
-
-<div class="divider"></div>
-
-<div class="field">
 <div class="field-label">Pause nach Abspielen</div>
 <div class="field-help">Wie lange warten, bevor der Ton erneut ausgeloest wird? Verhindert Dauer-Abspielen.</div>
 <div class="slider-row" style="margin-top:8px">
@@ -331,7 +315,6 @@ var btns=$('sensGroup').querySelectorAll('.tg-btn');
 btns.forEach(function(b,i){b.classList.toggle('active',i===level)});
 api('/api/radar/sensitivity','level='+level).then(()=>toast('Empfindlichkeit gesetzt'))}
 
-function setTrackLen(){api('/api/tracklen','seconds='+$('tracklen').value).then(()=>toast('Track-Laenge gesetzt'))}
 function setCooldown(){api('/api/cooldown','seconds='+$('cooldown').value).then(()=>toast())}
 function setSensorTimeout(){api('/api/radar/timeout','timeout='+$('timeout').value).then(()=>toast())}
 
@@ -351,7 +334,6 @@ else{au.textContent='Bereit';au.className='stat-value active'}
 $('vol').value=d.volume;$('volVal').textContent=d.volume;
 $('muteBtn').textContent=d.muted?'Ton an':'Stumm';
 $('cooldown').value=d.cooldown_sec;$('cdVal').textContent=d.cooldown_sec+'s';
-$('tracklen').value=d.track_sec;$('tlVal').textContent=d.track_sec+'s';
 }).catch(function(){})}
 
 updateStatus();
@@ -476,14 +458,14 @@ void setup_webserver() {
         snprintf(json, sizeof(json),
             "{\"presence\":%s,\"moving\":%s,\"move_dist\":%d,\"move_energy\":%d,"
             "\"stat_dist\":%d,\"stat_energy\":%d,"
-            "\"playing\":%s,\"cooldown\":%s,\"volume\":%d,\"muted\":%s,\"cooldown_sec\":%lu,\"track_sec\":%lu}",
+            "\"playing\":%s,\"cooldown\":%s,\"volume\":%d,\"muted\":%s,\"cooldown_sec\":%lu}",
             radar.presenceDetected() ? "true" : "false",
             radar.movingTargetDetected() ? "true" : "false",
             radar.movingTargetDistance(), radar.movingTargetEnergy(),
             radar.stationaryTargetDistance(), radar.stationaryTargetEnergy(),
             playState == STATE_PLAYING ? "true" : "false",
             playState == STATE_COOLDOWN ? "true" : "false",
-            (int)volume, muted ? "true" : "false", cooldownSeconds, trackDurationMs / 1000);
+            (int)volume, muted ? "true" : "false", cooldownSeconds);
         r->send(200, "application/json", json);
     });
 
@@ -513,15 +495,6 @@ void setup_webserver() {
         }
         printf("[Web] Test Play angefordert\n");
         requestPlay = true;
-        r->send(200, "application/json", "{\"ok\":true}");
-    });
-
-    server.on("/api/tracklen", HTTP_POST, [](AsyncWebServerRequest *r) {
-        if (r->hasParam("seconds", true)) {
-            trackDurationMs = r->getParam("seconds", true)->value().toInt() * 1000;
-            printf("[Web] Track-Laenge: %lu ms\n", trackDurationMs);
-            save_settings();
-        }
         r->send(200, "application/json", "{\"ok\":true}");
     });
 
@@ -582,31 +555,28 @@ void app_main(void) {
     printf("WiFi AP: '%s' -> http://%s\n\n", AP_SSID, WiFi.softAPIP().toString().c_str());
     dnsServer.start(53, "*", WiFi.softAPIP());
 
-    // --- DFPlayer Mini ---
-    dfSerial.begin(9600, SERIAL_8N1, DFPLAYER_RX, DFPLAYER_TX);
+    // --- DFPlayer Pro ---
+    dfSerial.begin(115200, SERIAL_8N1, DFPLAYER_RX, DFPLAYER_TX);
     delay(1000);
 
-    if (!dfPlayer.begin(dfSerial, false, false)) {
-        printf("ERROR: DFPlayer Mini nicht gefunden!\n");
-        printf("  Pruefe: TX->GPIO%d, RX->GPIO%d, 5V, GND\n", DFPLAYER_TX, DFPLAYER_RX);
+    if (!dfPlayer.begin(dfSerial)) {
+        printf("ERROR: DFPlayer Pro nicht gefunden!\n");
+        printf("  Pruefe: TX->GPIO%d, RX->GPIO%d, 3.3-5V, GND\n", DFPLAYER_TX, DFPLAYER_RX);
     } else {
         dfPlayerReady = true;
+        dfPlayer.switchFunction(dfPlayer.MUSIC);
+        delay(500);
+        dfPlayer.setPlayMode(dfPlayer.SINGLE);
+        dfPlayer.setPrompt(false);
+        dfPlayer.setVol(volume);
         delay(200);
-        int files = dfPlayer.readFileCounts();
-        printf("DFPlayer Mini verbunden. Dateien: %d\n", files);
+        dfPlayer.pause();
+        int files = dfPlayer.getTotalFile();
+        printf("DFPlayer Pro verbunden. Dateien: %d\n", files);
         if (files == 0) {
             printf("  WARNUNG: Keine MP3-Dateien auf SD!\n");
             printf("  Datei als 0001.mp3 im Root ablegen.\n");
         }
-    }
-
-    if (dfPlayerReady) {
-        dfPlayer.volume(volume);
-        dfPlayer.EQ(DFPLAYER_EQ_NORMAL);
-        dfPlayer.outputDevice(DFPLAYER_DEVICE_SD);
-        delay(200);
-        dfPlayer.stop();
-        delay(100);
     }
     printf("Audio Volume: %d / %d\n\n", volume, VOL_MAX);
 
@@ -658,9 +628,9 @@ void setup() {
 static void do_play() {
     if (!dfPlayerReady) return;
     printf("[Audio] Play Track 1\n");
-    dfPlayer.volume(volume);
+    dfPlayer.setVol(muted ? 0 : volume);
     delay(100);
-    dfPlayer.play(1);
+    dfPlayer.playFileNum(1);
     delay(100);
     playState = STATE_PLAYING;
     playbackStartedAt = millis();
@@ -701,10 +671,18 @@ void loop() {
             break;
 
         case STATE_PLAYING:
-            if (millis() - playbackStartedAt >= trackDurationMs) {
-                printf("[Audio] Fertig (Timer %lu ms)\n", trackDurationMs);
-                playbackFinishedAt = millis();
-                playState = STATE_COOLDOWN;
+            if (millis() - playbackStartedAt > 2000) {
+                uint16_t cur = dfPlayer.getCurTime();
+                uint16_t total = dfPlayer.getTotalTime();
+                if (total > 0 && cur >= total) {
+                    printf("[Audio] Fertig (%d/%d s)\n", cur, total);
+                    playbackFinishedAt = millis();
+                    playState = STATE_COOLDOWN;
+                } else if (millis() - playbackStartedAt > 180000) {
+                    printf("[Audio] Fertig (Timeout)\n");
+                    playbackFinishedAt = millis();
+                    playState = STATE_COOLDOWN;
+                }
             }
             break;
 
