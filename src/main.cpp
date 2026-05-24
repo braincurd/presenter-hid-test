@@ -207,6 +207,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;heigh
 <body>
 <div class="header">
 <h1>Laola Setup</h1>
+<span style="color:rgba(255,255,255,.6);font-size:.55em;margin-left:auto;white-space:nowrap">powered by Exponatwerke</span>
 </div>
 <div class="content">
 
@@ -327,8 +328,8 @@ function toast(msg){var t=$('toast');t.textContent=msg||'Gespeichert!';t.style.d
 function api(url,data){return fetch(url,data?{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:data}:{}).then(r=>r.json())}
 
 function setVol(v){$('volVal').textContent=v;api('/api/volume','volume='+v)}
-function toggleMute(){api('/api/mute').then(d=>{$('muteBtn').textContent=d.muted?'Ton an':'Stumm';toast(d.muted?'Stumm geschaltet':'Ton an')})}
-function testPlay(){api('/api/play').then(d=>{if(d.ok)toast('Wird abgespielt...');else toast(d.error||'Fehler')})}
+function toggleMute(){api('/api/mute','mute=1').then(d=>{$('muteBtn').textContent=d.muted?'Ton an':'Stumm';toast(d.muted?'Stumm geschaltet':'Ton an')})}
+function testPlay(){api('/api/play','test=1').then(d=>{if(d.ok)toast('Wird abgespielt...');else toast(d.error||'Fehler')})}
 
 function setRange(){api('/api/radar/range','meters='+$('range').value).then(()=>toast('Reichweite gesetzt'))}
 
