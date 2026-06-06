@@ -46,9 +46,6 @@ static unsigned long minTriggerInterval = 5000;
 static volatile bool requestPlay = false;
 static uint16_t lastCurTime = 0;
 static unsigned long lastCurTimeChange = 0;
-static volatile uint8_t selectedTrack = 1;
-static const uint8_t TRACK_COUNT = 4;
-static const char *trackNames[] = {"Crowd Fans Song", "Crowd Reaction", "Fans Cheering", "Jingle mit Outro"};
 
 // --- Persistent Settings ---
 Preferences prefs;
@@ -58,7 +55,6 @@ static void save_settings() {
     prefs.putUChar("volume", volume);
     prefs.putBool("muted", muted);
     prefs.putULong("cooldown", cooldownSeconds);
-    prefs.putUChar("track", selectedTrack);
     prefs.end();
     printf("[NVS] Einstellungen gespeichert\n");
 }
@@ -68,10 +64,8 @@ static void load_settings() {
     volume = prefs.getUChar("volume", 20);
     muted = prefs.getBool("muted", false);
     cooldownSeconds = prefs.getULong("cooldown", 10);
-    selectedTrack = prefs.getUChar("track", 1);
-    if (selectedTrack < 1 || selectedTrack > TRACK_COUNT) selectedTrack = 1;
     prefs.end();
-    printf("[NVS] Einstellungen geladen: vol=%d cool=%lu track=%d\n", volume, cooldownSeconds, selectedTrack);
+    printf("[NVS] Einstellungen geladen: vol=%d cool=%lu\n", volume, cooldownSeconds);
 }
 
 // --- WiFi AP & Web ---
@@ -227,20 +221,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;heigh
 </div>
 
 <div class="card">
-<h2>Sound</h2>
-<div class="field">
-<div class="field-label">Track auswaehlen</div>
-<div class="field-help">Welcher Sound soll bei Erkennung abgespielt werden?</div>
-<div class="toggle-group" style="margin-top:8px;flex-direction:column" id="trackGroup">
-<button class="tg-btn" onclick="setTrack(1)">1 - Crowd Fans Song</button>
-<button class="tg-btn" onclick="setTrack(2)">2 - Crowd Reaction</button>
-<button class="tg-btn active" onclick="setTrack(3)">3 - Fans Cheering</button>
-<button class="tg-btn" onclick="setTrack(4)">4 - Jingle mit Outro</button>
-</div>
-</div>
-</div>
-
-<div class="card">
 <h2>Erkennung</h2>
 
 <div class="field">
@@ -338,10 +318,6 @@ var btns=$('sensGroup').querySelectorAll('.tg-btn');
 btns.forEach(function(b,i){b.classList.toggle('active',i===level)});
 api('/api/radar/sensitivity','level='+level).then(()=>toast('Empfindlichkeit gesetzt'))}
 
-function setTrack(n){
-var btns=$('trackGroup').querySelectorAll('.tg-btn');
-btns.forEach(function(b,i){b.classList.toggle('active',i===n-1)});
-api('/api/track','track='+n).then(()=>toast('Track '+n+' gewaehlt'))}
 function setCooldown(){api('/api/cooldown','seconds='+$('cooldown').value).then(()=>toast())}
 function setSensorTimeout(){api('/api/radar/timeout','timeout='+$('timeout').value).then(()=>toast())}
 
@@ -361,8 +337,6 @@ else{au.textContent='Bereit';au.className='stat-value active'}
 $('vol').value=d.volume;$('volVal').textContent=d.volume;
 $('muteBtn').textContent=d.muted?'Ton an':'Stumm';
 $('cooldown').value=d.cooldown_sec;$('cdVal').textContent=d.cooldown_sec+'s';
-var tb=$('trackGroup').querySelectorAll('.tg-btn');
-tb.forEach(function(b,i){b.classList.toggle('active',i===d.track-1)});
 }).catch(function(){})}
 
 updateStatus();
@@ -487,14 +461,14 @@ void setup_webserver() {
         snprintf(json, sizeof(json),
             "{\"presence\":%s,\"moving\":%s,\"move_dist\":%d,\"move_energy\":%d,"
             "\"stat_dist\":%d,\"stat_energy\":%d,"
-            "\"playing\":%s,\"cooldown\":%s,\"volume\":%d,\"muted\":%s,\"cooldown_sec\":%lu,\"track\":%d}",
+            "\"playing\":%s,\"cooldown\":%s,\"volume\":%d,\"muted\":%s,\"cooldown_sec\":%lu}",
             radar.presenceDetected() ? "true" : "false",
             radar.movingTargetDetected() ? "true" : "false",
             radar.movingTargetDistance(), radar.movingTargetEnergy(),
             radar.stationaryTargetDistance(), radar.stationaryTargetEnergy(),
             playState == STATE_PLAYING ? "true" : "false",
             playState == STATE_COOLDOWN ? "true" : "false",
-            (int)volume, muted ? "true" : "false", cooldownSeconds, (int)selectedTrack);
+            (int)volume, muted ? "true" : "false", cooldownSeconds);
         r->send(200, "application/json", json);
     });
 
@@ -525,19 +499,6 @@ void setup_webserver() {
         printf("[Web] Test Play angefordert\n");
         requestPlay = true;
         r->send(200, "application/json", "{\"ok\":true}");
-    });
-
-    server.on("/api/track", HTTP_POST, [](AsyncWebServerRequest *r) {
-        if (r->hasParam("track", true)) {
-            int t = r->getParam("track", true)->value().toInt();
-            if (t >= 1 && t <= TRACK_COUNT) {
-                selectedTrack = t;
-                printf("[Web] Track: %d - %s\n", selectedTrack, trackNames[selectedTrack - 1]);
-                save_settings();
-            }
-        }
-        char json[64]; snprintf(json, sizeof(json), "{\"track\":%d}", (int)selectedTrack);
-        r->send(200, "application/json", json);
     });
 
     server.on("/api/cooldown", HTTP_POST, [](AsyncWebServerRequest *r) {
@@ -669,10 +630,10 @@ void setup() {
 
 static void do_play() {
     if (!dfPlayerReady) return;
-    printf("[Audio] Play Track %d - %s\n", selectedTrack, trackNames[selectedTrack - 1]);
+    printf("[Audio] Play\n");
     dfPlayer.setVol(muted ? 0 : volume);
     delay(100);
-    dfPlayer.playFileNum(selectedTrack);
+    dfPlayer.playFileNum(1);
     delay(100);
     playState = STATE_PLAYING;
     playbackStartedAt = millis();

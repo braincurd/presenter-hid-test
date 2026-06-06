@@ -1,12 +1,14 @@
-# Laola - Interaktiver Sound Player
+# Laola - Interaktiver Sound Player (Telekom Shop Variante)
 
 ESP32-S3-basierter Sound Player fuer den Eingangsbereich. Erkennt Personen per mmWave-Radar und spielt einen Begruessung-Sound ab. Steuerung ueber Wireless Presenter-Fernbedienung und Web-Interface (Captive Portal).
+
+> **Telekom Shop Variante:** Diese Version spielt einen festen Sound (`0001.mp3`). Die Track-Auswahl wurde entfernt.
 
 ## Features
 
 - **Personenerkennung** via HLK-LD2410C mmWave-Radar (kein PIR, funktioniert auch bei Stillstand)
 - **MP3-Wiedergabe** ueber DFPlayer Pro (DFRobot DF1201S) mit Lautsprecher
-- **4 Tracks** zur Auswahl ueber das Captive Portal
+- **Fester Sound** - spielt `0001.mp3` bei jeder Erkennung
 - **Automatische Track-Erkennung** - Wiedergabedauer wird automatisch erkannt
 - **Wireless Presenter** als Fernbedienung (USB HID via Dongle)
 - **Captive Portal** zur Konfiguration per Smartphone
@@ -83,11 +85,8 @@ USB-A Buchse           ESP32-S3
 ## SD-Karte vorbereiten
 
 1. microSD Karte (max. 32GB) mit **FAT32** formatieren
-2. MP3-Dateien nummeriert im Root-Verzeichnis ablegen:
-   - `0001.mp3` — Track 1 (Crowd Fans Song)
-   - `0002.mp3` — Track 2 (Crowd Reaction)
-   - `0003.mp3` — Track 3 (Fans Cheering)
-   - `0004.mp3` — Track 4 (Jingle mit Outro)
+2. Eine MP3-Datei im Root-Verzeichnis ablegen:
+   - `0001.mp3` — Begruessungs-Sound (auf max. Lautstaerke normalisiert)
 3. SD-Karte in den DFPlayer Pro einsetzen
 
 ## Firmware flashen
@@ -125,9 +124,6 @@ pio device monitor
 - **Slider (0-30):** Lautstaerke regeln
 - **Stumm-Button:** Ton ein/aus
 - **Ton testen:** Spielt den Sound einmal testweise ab
-
-#### Sound
-- **Track auswaehlen (1-4):** Welcher Sound bei Erkennung abgespielt wird. Auswahl wird persistent gespeichert.
 
 #### Erkennung
 
