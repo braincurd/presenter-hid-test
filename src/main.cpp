@@ -43,6 +43,11 @@ static unsigned long playbackStartedAt = 0;
 static unsigned long cooldownSeconds = 10;
 static unsigned long lastTriggerAt = 0;
 static unsigned long minTriggerInterval = 5000;
+
+// --- Radar-Einstellungen (im ESP-NVS gespiegelt, beim Boot ans Radar gesendet) ---
+static uint8_t radarRangeM = 3;       // Reichweite in Metern (1-6)
+static uint8_t radarSensLevel = 1;    // Empfindlichkeit: 0=Niedrig, 1=Mittel, 2=Hoch
+static uint8_t radarTimeoutS = 5;     // Sensor-Timeout in Sekunden (1-30)
 static volatile bool requestPlay = false;
 static uint16_t lastCurTime = 0;
 static unsigned long lastCurTimeChange = 0;
@@ -55,6 +60,9 @@ static void save_settings() {
     prefs.putUChar("volume", volume);
     prefs.putBool("muted", muted);
     prefs.putULong("cooldown", cooldownSeconds);
+    prefs.putUChar("rRange", radarRangeM);
+    prefs.putUChar("rSens", radarSensLevel);
+    prefs.putUChar("rTimeout", radarTimeoutS);
     prefs.end();
     printf("[NVS] Einstellungen gespeichert\n");
 }
@@ -64,8 +72,15 @@ static void load_settings() {
     volume = prefs.getUChar("volume", 20);
     muted = prefs.getBool("muted", false);
     cooldownSeconds = prefs.getULong("cooldown", 10);
+    radarRangeM = prefs.getUChar("rRange", 3);
+    radarSensLevel = prefs.getUChar("rSens", 1);
+    radarTimeoutS = prefs.getUChar("rTimeout", 5);
+    if (radarRangeM < 1 || radarRangeM > 6) radarRangeM = 3;
+    if (radarSensLevel > 2) radarSensLevel = 1;
+    if (radarTimeoutS < 1 || radarTimeoutS > 30) radarTimeoutS = 5;
     prefs.end();
-    printf("[NVS] Einstellungen geladen: vol=%d cool=%lu\n", volume, cooldownSeconds);
+    printf("[NVS] Einstellungen geladen: vol=%d cool=%lu range=%dm sens=%d timeout=%ds\n",
+           volume, cooldownSeconds, radarRangeM, radarSensLevel, radarTimeoutS);
 }
 
 // --- WiFi AP & Web ---
@@ -114,37 +129,40 @@ static void toggle_mute() {
     apply_volume();
 }
 
-static void set_radar_sensitivity(int level) {
+static int range_to_gate(int meters) {
+    int gate = meters * 100 / 75;
+    if (gate < 2) gate = 2;
+    if (gate > 8) gate = 8;
+    return gate;
+}
+
+// Sendet alle gespeicherten Radar-Werte (Reichweite, Empfindlichkeit, Timeout)
+// ans Radar-Modul. Mit restart=true wird die Config in den Radar-Flash committet.
+static void apply_radar_config(bool restart) {
     int moveSens, statSens;
-    switch (level) {
+    switch (radarSensLevel) {
         case 0: moveSens = 25; statSens = 15; break;
         case 1: moveSens = 50; statSens = 30; break;
         case 2: moveSens = 75; statSens = 50; break;
         default: moveSens = 50; statSens = 30; break;
     }
-    printf("[Radar] Empfindlichkeit: %d (Bew=%d, Ruhe=%d)\n", level, moveSens, statSens);
+    int gate = range_to_gate(radarRangeM);
+    printf("[Radar] Config: %dm (Gate %d), Sens=%d (Bew=%d, Ruhe=%d), Timeout=%ds\n",
+           radarRangeM, gate, radarSensLevel, moveSens, statSens, radarTimeoutS);
+
     for (int g = 0; g <= 8; g++) {
         radar.setGateSensitivityThreshold(g, moveSens, statSens);
         delay(50);
     }
-    radar.requestRestart();
-    delay(1500);
-    radar.requestCurrentConfiguration();
-    delay(200);
-    while (radar.read()) {}
-}
+    radar.setMaxValues(gate, gate, radarTimeoutS);
 
-static void set_radar_range(int meters) {
-    int gate = meters * 100 / 75;
-    if (gate < 2) gate = 2;
-    if (gate > 8) gate = 8;
-    printf("[Radar] Reichweite: %dm (Gate %d)\n", meters, gate);
-    radar.setMaxValues(gate, gate, radar.sensor_idle_time);
-    radar.requestRestart();
-    delay(1500);
-    radar.requestCurrentConfiguration();
-    delay(200);
-    while (radar.read()) {}
+    if (restart) {
+        radar.requestRestart();
+        delay(1500);
+        radar.requestCurrentConfiguration();
+        delay(200);
+        while (radar.read()) {}
+    }
 }
 
 // --- Web Page ---
@@ -337,8 +355,15 @@ else{au.textContent='Bereit';au.className='stat-value active'}
 $('vol').value=d.volume;$('volVal').textContent=d.volume;
 $('muteBtn').textContent=d.muted?'Ton an':'Stumm';
 $('cooldown').value=d.cooldown_sec;$('cdVal').textContent=d.cooldown_sec+'s';
+if(firstLoad){
+firstLoad=false;
+if(d.range){$('range').value=d.range;$('rangeVal').textContent=d.range+'m'}
+if(d.timeout){$('timeout').value=d.timeout;$('toVal').textContent=d.timeout+'s'}
+if(typeof d.sens==='number'){var sb=$('sensGroup').querySelectorAll('.tg-btn');sb.forEach(function(b,i){b.classList.toggle('active',i===d.sens)})}
+}
 }).catch(function(){})}
 
+var firstLoad=true;
 updateStatus();
 setInterval(updateStatus,2000);
 </script>
@@ -457,18 +482,20 @@ void setup_webserver() {
     server.on("/fwlink", HTTP_GET, [](AsyncWebServerRequest *r) { r->redirect("/"); });
 
     server.on("/api/status", HTTP_GET, [](AsyncWebServerRequest *r) {
-        char json[300];
+        char json[360];
         snprintf(json, sizeof(json),
             "{\"presence\":%s,\"moving\":%s,\"move_dist\":%d,\"move_energy\":%d,"
             "\"stat_dist\":%d,\"stat_energy\":%d,"
-            "\"playing\":%s,\"cooldown\":%s,\"volume\":%d,\"muted\":%s,\"cooldown_sec\":%lu}",
+            "\"playing\":%s,\"cooldown\":%s,\"volume\":%d,\"muted\":%s,\"cooldown_sec\":%lu,"
+            "\"range\":%d,\"sens\":%d,\"timeout\":%d}",
             radar.presenceDetected() ? "true" : "false",
             radar.movingTargetDetected() ? "true" : "false",
             radar.movingTargetDistance(), radar.movingTargetEnergy(),
             radar.stationaryTargetDistance(), radar.stationaryTargetEnergy(),
             playState == STATE_PLAYING ? "true" : "false",
             playState == STATE_COOLDOWN ? "true" : "false",
-            (int)volume, muted ? "true" : "false", cooldownSeconds);
+            (int)volume, muted ? "true" : "false", cooldownSeconds,
+            (int)radarRangeM, (int)radarSensLevel, (int)radarTimeoutS);
         r->send(200, "application/json", json);
     });
 
@@ -513,7 +540,11 @@ void setup_webserver() {
     server.on("/api/radar/range", HTTP_POST, [](AsyncWebServerRequest *r) {
         if (r->hasParam("meters", true)) {
             int m = r->getParam("meters", true)->value().toInt();
-            set_radar_range(m);
+            if (m >= 1 && m <= 6) {
+                radarRangeM = m;
+                apply_radar_config(true);
+                save_settings();
+            }
         }
         r->send(200, "application/json", "{\"ok\":true}");
     });
@@ -521,7 +552,11 @@ void setup_webserver() {
     server.on("/api/radar/sensitivity", HTTP_POST, [](AsyncWebServerRequest *r) {
         if (r->hasParam("level", true)) {
             int l = r->getParam("level", true)->value().toInt();
-            set_radar_sensitivity(l);
+            if (l >= 0 && l <= 2) {
+                radarSensLevel = l;
+                apply_radar_config(true);
+                save_settings();
+            }
         }
         r->send(200, "application/json", "{\"ok\":true}");
     });
@@ -529,11 +564,12 @@ void setup_webserver() {
     server.on("/api/radar/timeout", HTTP_POST, [](AsyncWebServerRequest *r) {
         if (r->hasParam("timeout", true)) {
             int t = r->getParam("timeout", true)->value().toInt();
-            printf("[Web] Sensor-Timeout: %d s\n", t);
-            radar.setMaxValues(radar.max_moving_gate, radar.max_stationary_gate, t);
-            radar.requestRestart();
-            delay(1500);
-            radar.requestCurrentConfiguration();
+            if (t >= 1 && t <= 30) {
+                radarTimeoutS = t;
+                printf("[Web] Sensor-Timeout: %d s\n", t);
+                apply_radar_config(true);
+                save_settings();
+            }
         }
         r->send(200, "application/json", "{\"ok\":true}");
     });
@@ -590,9 +626,8 @@ void app_main(void) {
     if (radar.begin(radarSerial)) {
         radarReady = true;
         printf("LD2410C verbunden.\n");
-        radar.requestCurrentConfiguration();
-        delay(200);
-        while (radar.read()) {}
+        // Gespeicherte Einstellungen aktiv ans Radar senden (robust bei Modultausch)
+        apply_radar_config(true);
         printf("  Max Bewegungs-Gate: %d\n", radar.max_moving_gate);
         printf("  Max Ruhe-Gate: %d\n", radar.max_stationary_gate);
         printf("  Timeout: %d s\n", radar.sensor_idle_time);
